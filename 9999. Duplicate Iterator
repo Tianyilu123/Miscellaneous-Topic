@@ -1,1 +1,49 @@
 
+
+
+public class DeduplicateIterator {
+      private Iterator<Integer> iter;
+      private Integer next;
+      
+      public DeduplicateIterator(List<Integer> input) {
+            this.iter = input.iterator();
+            next = null;
+      }
+      
+      public boolean hasNext() {
+            return next != null || iter.hasNext();
+      }
+      
+      public int next() {
+            int cur = 0;
+            if(next != null) {
+                cur = next;
+                next = null;
+            } else {
+                cur = iter.next();
+            }
+            
+            while(iter.hasNext()) {
+                 int val = iter.next();
+                 if(val != cur) {
+                      next = val;
+                      break;
+                 }
+            }
+            
+            return cur;
+       }
+       
+       public static void main(String[] args) {
+            List<Integer> input = Arrays.asList(1,2,2,3,3,4,4,5);
+            DeduplicateIterator iter = new DeduplicateIterator(input);
+            
+            while(iter.hasNext()) {
+                int i = iter.next();
+                iter.hasNext();
+                System.out.println(i);
+                }
+            
+            System.out.println(iter.hasNext());
+           }
+       }
