@@ -1,0 +1,22 @@
+
+class Vector2D {
+        int[][]v;
+        int i=0;
+        int j=0;
+    public Vector2D(int[][] v) {
+        this.v = v;
+    }
+    
+    public int next() {
+        int val = v[i][j];
+        j = j+1 < v[i].length ? j+1 : 0;
+        i = j==0 ? i+1 : i;
+        return val;
+    }
+    
+    public boolean hasNext() {
+        while(i<v.length && (v[i]==null || v[i].length==0))
+            i++;
+        return i<v.length && j<v[i].length;
+    }
+}
