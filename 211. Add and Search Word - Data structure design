@@ -1,0 +1,58 @@
+
+class WordDictionary {
+    
+    /** Initialize your data structure here. */
+    public WordDictionary() {
+    }
+    
+    private TrieNode root = new TrieNode('\0');
+    
+    /** Adds a word into the data structure. */
+    public void addWord(String word) {
+        TrieNode cur = root;
+        for(char ch : word.toCharArray()) {
+            if(cur.children[ch-'a'] == null) {
+                cur.children[ch-'a'] = new TrieNode(ch);
+            }
+            cur = cur.children[ch-'a'];
+        }
+        cur.isLeaf = true;
+    }
+    
+    /** Returns if the word is in the data structure. A word could contain the dot character '.' to represent any one letter. */
+    public boolean search(String word) {
+        return dfs(root, word, 0);
+    }
+    
+    private boolean dfs(TrieNode cur, String word, int index) {
+        int len = word.length();
+        if(len == index) {
+            return cur.isLeaf;
+        }
+        char ch = word.charAt(index);
+        if(ch != '.') {
+            if(cur.children[ch-'a'] == null) {
+                return false;
+            }
+            return dfs(cur.children[ch-'a'], word, index+1);
+        } else {
+            for(TrieNode next : cur.children) {
+                if(next != null && dfs(next, word, index+1)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+}
+
+class TrieNode {
+    public char ch;
+    public TrieNode[] children;
+    public boolean isLeaf = false;
+    
+    public TrieNode(char c) {
+        children = new TrieNode[26];
+        ch = c;
+    }
+}
