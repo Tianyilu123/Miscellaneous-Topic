@@ -1,1 +1,12 @@
 
+public void shuffle(int[] cards) {
+    if(cards == null || cards.length == 0) return;
+    int len = cards.length;
+    for(int i=0; i<len; i++) {
+        Random rand = new Random();
+        int k = rand.nextInt(i+1); //[0,i]
+        int temp = cards[k];
+        cards[k] = cards[i];
+        cards[i] = temp;
+      }
+   }
