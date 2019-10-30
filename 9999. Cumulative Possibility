@@ -1,1 +1,40 @@
 
+public class Solution {
+
+  private class Range {
+     public int low, high;
+     public String symbol;
+     
+     public Range(int low, int high, String symbol) {
+          this.low = low;
+          this.high = high;
+          this.symbol = symbol;
+      }
+    }
+    
+  private List<Range> generateRnage(HashMap<String, Integer> map) {
+       List<Range> ret = new ArrayList<>();
+       return ret;
+   }
+   
+  public String randomlyGenerator(HashMap<String, Integer> map) {
+        List<Range> rangeList = generateRange(map);
+        Random rand = new Random();
+        int val = rand.nextInt(100);
+        int start = 0, end = rangeList.size()-1;
+        
+        while(start<=end) {
+           int mid = start + (end - start)/2;
+           Range midRange = rangeList.get(mid);
+           if（val >= midRange.low && val <= midRange.high) {
+              return midRange.symbol;
+            } else if(val < midRange.low) {
+                  end = mid - 1;
+            } else {
+                  start = mid + 1;
+            }
+        }
+        
+        return "";
+       }
+     }
