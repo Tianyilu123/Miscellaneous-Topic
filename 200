@@ -1,1 +1,128 @@
 
+// method 1: DFS
+
+class Solution {
+    public int numIslands(char[][] grid) {
+        if(grid == null || grid.length == 0 || grid[0] == null || grid[0].length == 0) return 0;
+        
+        int[][] dirs = {{1,0},{-1,0},{0,1},{0,-1}};
+        int count = 0;
+        for(int i=0; i<grid.length; i++) {
+            for(int j=0; j<grid[0].length; j++) {
+                if(grid[i][j] == '1') {
+                    count++;
+                    dfs(grid, i, j, dirs);
+                }
+            }
+        }
+        return count;
+    }
+    
+    private void dfs(char[][] grid, int i, int j, int[][] dirs) {
+        grid[i][j] = '0';
+        
+        for(int[] dir:dirs) {
+            int ii = i+dir[0];
+            int jj = j+dir[1];
+            if(ii>=0 && ii<grid.length && jj>=0 && jj<grid[0].length && grid[ii][jj] == '1')
+                dfs(grid, ii, jj, dirs);
+        }
+    }
+}
+
+
+// time: O(M*N)
+
+
+// method 2: Union Find
+
+class Solution {
+    public int numIslands(char[][] grid) {
+        if(grid == null || grid.length==0 || grid[0] == null) return 0;
+        int row = grid.length, col = grid[0].length;
+        
+        UnionFind uf = new UnionFind(row, col);
+        int[][] dirs = {{-1,0}, {1,0}, {0,-1}, {0,1}};
+        
+        for(int i=0; i<row; i++) {
+            for(int j=0; j<col; j++) {
+                if(grid[i][j] == '1') {
+                    int p = uf.index(i, j);
+                    uf.addIsland(p);
+                    
+                    for(int[] dir : dirs) {
+                        int rowIdx = i+dir[0], colIdx = j+dir[1];
+                        
+                        int q = uf.index(rowIdx, colIdx);
+                        if(rowIdx >= 0 && rowIdx < row && colIdx >= 0 && colIdx < col && 
+                                uf.isIsland(q) && !uf.find(p,q)) {
+                            uf.union(p,q);
+                        }
+                    }
+                }
+            }
+        }
+        return uf.size;
+    }
+    
+    private class UnionFind {
+        public int size, row, col;
+        public int[] ids, sz;
+        
+        public UnionFind(int row, int col) {
+            this.size = 0;
+            this.row = 0;
+            this.col = col;
+            int len = row * col;
+            ids = new int[len];
+            sz = new int[len];
+            
+            for(int i=0; i<len; i++) {
+                ids[i] = -1;
+                sz[i] = 1;
+            }
+        }
+        
+        public boolean find(int p, int q) {
+            return root(p) == root(q);
+        }
+        
+        public void union(int p, int q) {
+            int rootP = root(p), rootQ = root(q);
+            if(sz[rootP] < sz[rootQ]) 
+                union(q,p);
+            else {
+                ids[rootQ] = rootP;
+                sz[rootP] += sz[rootQ];
+                this.size--;
+            }
+        }
+        
+        private int root(int p) {
+            int tempP = p;
+            while(ids[p] != p) {
+                ids[p] = ids[ids[p]];
+                p = ids[p];
+            }
+            ids[tempP] = p;
+            return p;
+        }
+        
+        public int index(int i, int j) {
+            return i*col + j;
+        }
+        
+        public void addIsland(int p) {
+            if(ids[p] == -1) {
+                ids[p] = p;
+                size++;
+            }
+        }
+        
+        public boolean isIsland(int p) {
+            return ids[p] != -1;
+        }
+    }
+}
+
+// time: O(k*log(M*N)), k is #1 in matrix
