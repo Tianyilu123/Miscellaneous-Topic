@@ -1,111 +1,76 @@
-
 class Solution {
-    public List<List<String>> wordSquares(String[] words) {
-        List<List<String>> res = new ArrayList<>();
-        if(words == null || words.length == 0)
-            return res;
-        
-        int len = words[0].length();
-        String[] cur = new String[len];
-        
-        Trie trie = new Trie();
-        for(String word : words) {
-            trie.addWord(word);
+    class Node {
+        Node[] arr;
+        boolean isEnd;
+        String str;
+        public Node() {
+            this.arr = new Node[26];
+            this.isEnd = false;
+            this.str = null;
         }
-        
-        dfs(res, cur, 0, trie);
+    }
+    
+    private void add (Node root, String s) {
+        Node cur = root;
+        for(char c : s.toCharArray()) {
+            if(cur.arr[c-'a'] == null)
+                cur.arr[c-'a'] = new Node();
+            cur = cur.arr[c-'a'];
+        }
+        cur.isEnd = true;
+        cur.str = s;
+    }
+    
+    private List<String> search(Node root, String prefix) {
+        List<String> res = new ArrayList<>();
+        Node cur = root;
+        for(char c : prefix.toCharArray()) {
+            cur = cur.arr[c - 'a'];
+            if(cur == null) return res;
+        }
+        dfs(cur, res);
         return res;
     }
     
-    private void dfs(List<List<String>> res, String[] cur, int idx, Trie trie) {
-        if(idx == cur.length) {
-            res.add(new ArrayList<String>(Arrays.asList(cur)));
+    private void dfs(Node root, List<String> list) {
+        for(Node n : root.arr) {
+            if(n != null && n.isEnd)
+                list.add(n.str);
+            if(n != null) dfs(n, list);
+        }
+        return;
+    }
+    
+    public List<List<String>> wordSquares(String[] words) {
+        List<List<String>> res = new ArrayList<>();
+        Node root = new Node();
+        for(String word : words) add(root, word);
+        for(String word : words) {
+            List<String> cur = new ArrayList<>();
+            cur.add(word);
+            helper(1, word.length(), cur, root, res);
+        }
+        
+        return res;
+    }
+    
+    private void helper(int k, int maxLen, List<String> cur, Node root, 
+                                    List<List<String>> res) {
+        if(k == maxLen) {
+            res.add(cur);
             return;
         }
-        
-        StringBuilder prefix = new StringBuilder();
-        for(int i=0; i<idx; i++) {
-            prefix.append(cur[i].charAt(idx));
+        String prefix = "";
+        for(String s : cur) {
+            prefix += s.charAt(k);
         }
         
-        List<String> nextWord = trie.startPrefix(prefix.toString());
-        for(String word : nextWord) {
-            cur[idx] = word;
-            dfs(res, cur, idx+1, trie);
+        List<String> candidates = search(root, prefix);
+        for(String candidate : candidates) {
+            List<String> cur_next = new ArrayList<>(cur);
+            cur_next.add(candidate);
+            helper(k+1, maxLen, cur_next, root, res);
         }
-    }
-}
-
-class Trie {
-    private class TrieNode {
-        public char ch;
-        public TrieNode[] nexts;
-        public boolean isLeaf;
-        
-        public TrieNode(char ch) {
-            this.ch = ch;
-            nexts = new TrieNode[26];
-            this.isLeaf = false;
-        }
-        
-        public List<String> getAllSubtree(StringBuilder curString) {
-            List<String> ret = new ArrayList<>();
-            int len = curString.length();
-            curString.append(this.ch);
-            if(this.isLeaf) {
-                ret.add(curString.toString());
-            } else {
-                for(TrieNode next : this.nexts) {
-                    if(next != null) {
-                        ret.addAll(next.getAllSubtree(curString));
-                    }
-                }
-            }
-            curString.setLength(len);
-            return ret;
-        }
-    }
-    
-    public TrieNode root;
-    
-    public Trie() {
-        this.root = new TrieNode('\0');
-    }
-    
-    public void addWord(String word) {
-        TrieNode cur = root;
-        int len = word.length();
-        
-        for(int i=0; i<len; i++) {
-            int idx = word.charAt(i) - 'a';
-            if(cur.nexts[idx] == null) {
-                cur.nexts[idx] = new TrieNode(word.charAt(i));
-            }
-            
-            cur = cur.nexts[idx];
-        }
-        cur.isLeaf = true;
-    }
-    
-    public List<String> startPrefix(String prefix) {
-        TrieNode cur = root;
-        int len = prefix.length();
-        
-        for(int i=0; i<len; i++) {
-            int idx = prefix.charAt(i) - 'a';
-            if(cur.nexts[idx] != null) {
-                cur = cur.nexts[idx];
-            } else {
-                return new ArrayList<String>();
-            }
-        }
-        
-        List<String> ret = new ArrayList<>();
-        for(TrieNode next : cur.nexts) {
-            if(next != null) {
-                ret.addAll(next.getAllSubtree(new StringBuilder(prefix)));
-            }
-        }
-        return ret;
+        return;
     }
 }
