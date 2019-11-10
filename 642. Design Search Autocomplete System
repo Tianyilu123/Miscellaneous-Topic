@@ -1,112 +1,92 @@
-
-import java.util.Map.Entry;
 class AutocompleteSystem {
-        private TrieNode root;
-        private TrieNode curNode;
-        private StringBuilder path;
-        private HashMap<String, Integer> countBook;
-
-    public AutocompleteSystem(String[] sentences, int[] times) {
-            if(sentences == null || times == null || sentences.length != times.length) 
-                throw new IllegalArgumentException();
+    class TrieNode implements Comparable<TrieNode> {
+        TrieNode[] children;
+        String s;
+        int times;
+        List<TrieNode> hot;
+        
+        public TrieNode() {
+            children = new TrieNode[128];
+            s = null;
+            times = 0;
+            hot = new ArrayList<>();
+        }
+        
+        public int compareTo(TrieNode o) {
+            if(this.times == o.times) {
+                return this.s.compareTo(o.s);
+            }
             
-            root = new TrieNode('\0');
-            curNode = root;
-            path = new StringBuilder();
-            countBook = new HashMap<>();
-            int len = sentences.length;
+            return o.times - this.times;
+        }
+        
+        public void update(TrieNode node) {
+            if(!this.hot.contains(node)) {
+                this.hot.add(node);
+            }
             
-            for(int i=0; i<len; i++) {
-                countBook.put(sentences[i], times[i]);
-                insert(sentences[i], times[i]);
+            Collections.sort(hot);
+            if(hot.size() > 3) {
+                hot.remove(hot.size()-1);
             }
         }
+    }
+    
+    TrieNode root;
+    TrieNode cur;
+    StringBuilder sb;
+    
+    public AutocompleteSystem(String[] sentences, int[] times) {
+        root = new TrieNode();
+        cur = root;
+        sb = new StringBuilder();
+        
+        for(int i=0; i<times.length; i++) {
+            add(sentences[i], times[i]);
+        }
+    }
+    
+    public void add(String sentence, int t) {
+        TrieNode tmp = root;
+        List<TrieNode> list = new ArrayList<>();
+        for(char c : sentence.toCharArray()) {
+            if(tmp.children[c] == null) {
+                tmp.children[c] = new TrieNode();
+            }
+            
+            tmp = tmp.children[c];
+            list.add(tmp);
+        }
+        
+        tmp.s = sentence;
+        tmp.times += t;
+        
+        for(TrieNode node : list) {
+            node.update(tmp);
+        }
+    }
     
     public List<String> input(char c) {
+        List<String> res = new ArrayList<>();
         if(c == '#') {
-                curNode = root;
-                String insertMe = path.toString();
-                Integer count = countBook.get(insertMe);
-                if(count == null) {
-                    countBook.put(insertMe, 1);
-                } else {
-                    countBook.put(insertMe, count+1);
-                }
-                insert(insertMe, countBook.get(insertMe));
-                path = new StringBuilder();
-                return new ArrayList<>();
-            }
-            path.append(c);
-            if(curNode == null) {
-                return new ArrayList<>();
-            }
-            int index = (c>='a' && c<='z') ? (c-'a') : 26;
-            curNode = curNode.nexts[index];
-            if(curNode == null) {
-                return new ArrayList<>();
-            }
-            return getTop3String(curNode.countMap);
+            add(sb.toString(), 1);
+            sb = new StringBuilder();
+            cur = root;
+            return res;
+        }
+        
+        sb.append(c);
+        if(cur != null) {
+            cur = cur.children[c];
+        }
+        if(cur == null) {
+            return res;
+        }
+        
+        for(TrieNode node : cur.hot) {
+            res.add(node.s);
+        }
+        
+        return res;
     }
-        
-        private void insert(String sentences, int times) {
-            TrieNode cur = root;
-            for(char ch : sentences.toCharArray()) {
-                int index = (ch>='a' && ch<='z') ? (ch-'a') : 26;
-                if(cur.nexts[index] == null) {
-                    cur.nexts[index] = new TrieNode(ch);
-                }
-                TrieNode next = cur.nexts[index];
-                next.countMap.put(sentences, times);
-                List<Pair> top3 = getTop3Pair(next.countMap);
-                next.countMap.clear();
-                for(Pair p : top3) {
-                    next.countMap.put(p.str, p.count);
-                }
-                cur = next;
-            }
-            cur.isLeaf = true;
-        }
-        
-        private List<String> getTop3String(HashMap<String, Integer> countMap) {
-            return getTop3Pair(countMap)
-                .stream()
-                .map(p -> p.str)
-                .collect(Collectors.toList());
-        }
-        
-        private List<Pair> getTop3Pair(HashMap<String, Integer> countMap) {
-            PriorityQueue<Pair> maxHeap = new PriorityQueue<>((a,b)-> 
-                                            (a.count == b.count ? a.str.compareTo(b.str) 
-                                           : b.count-a.count));
-            for(Entry<String, Integer> e : countMap.entrySet()) {
-                maxHeap.offer(new Pair(e.getKey(), e.getValue()));
-            }
-            List<Pair> ret = new ArrayList<>();
-            for(int i=0; i<3 && !maxHeap.isEmpty(); i++) {
-                ret.add(maxHeap.poll());
-            }
-            return ret;
-        }
-        
-        class TrieNode {
-            public char ch;
-            public TrieNode[] nexts;
-            public HashMap<String, Integer> countMap;
-            public boolean isLeaf;
-            public TrieNode(char ch) {
-                this.ch = ch;
-                nexts = new TrieNode[27];
-                this.isLeaf = false;
-                countMap = new HashMap<>(3);
-            }
-        }
-        
-        public class Pair {
-            public String str;
-            public int count;
-            public Pair(String str, int count) {
-                this.str = str;
-                this.count = count;
-            }
-        }
-    }
+}
